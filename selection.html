@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection Sort Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .speed-btn {
+            background: linear-gradient(45deg, #2196F3, #0b7dda);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: end;
+            gap: 5px;
+            margin: 40px 0;
+            min-height: 300px;
+        }
+
+        .array-element {
+            width: 60px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            padding-bottom: 10px;
+            transition: all 0.5s ease;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .array-element.current {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(243, 156, 18, 0.4);
+        }
+
+        .array-element.minimum {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(231, 76, 60, 0.4);
+        }
+
+        .array-element.comparing {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(155, 89, 182, 0.4);
+        }
+
+        .array-element.sorted {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            transform: scale(0.95);
+            box-shadow: 0 8px 16px rgba(39, 174, 96, 0.4);
+        }
+
+        .status {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 20px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .complexity-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .complexity-info h3 {
+            color: #333;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .complexity-info p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .min-marker {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid #e74c3c;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .min-marker.visible {
+            opacity: 1;
+        }
+
+        @keyframes swap {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .swapping {
+            animation: swap 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selection Sort Algorithm Visualization</h1>
+        
+        <div class="controls">
+            <button class="start-btn" onclick="startSort()">Start Sorting</button>
+            <button class="reset-btn" onclick="resetArray()">Reset Array</button>
+            <button class="speed-btn" onclick="toggleSpeed()">Speed: Normal</button>
+        </div>
+
+        <div class="status" id="status">Click "Start Sorting" to begin the Selection Sort algorithm</div>
+
+        <div class="array-container" id="arrayContainer"></div>
+
+        <div class="complexity-info">
+            <h3>Algorithm Information</h3>
+            <p><strong>Time Complexity:</strong> O(n²) - The algorithm makes n-1 passes, and in each pass, it compares with remaining elements</p>
+            <p><strong>Space Complexity:</strong> O(1) - Only uses a constant amount of extra space</p>
+            <p><strong>How it works:</strong> Selection sort finds the minimum element from the unsorted part and places it at the beginning. It maintains two parts: sorted (left) and unsorted (right).</p>
+        </div>
+    </div>
+
+    <script>
+        let array = [5, 2, 8, 12, 1, 6, 3];
+        let isRunning = false;
+        let speed = 1000; // milliseconds
+        let speedLevel = 1; // 1=slow, 2=normal, 3=fast
+
+        function createArrayVisualization() {
+            const container = document.getElementById('arrayContainer');
+            container.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.style.height = `${value * 20 + 50}px`;
+                element.textContent = value;
+                element.id = `element-${index}`;
+                
+                const marker = document.createElement('div');
+                marker.className = 'min-marker';
+                marker.id = `marker-${index}`;
+                element.appendChild(marker);
+                
+                container.appendChild(element);
+            });
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function highlightElement(index, className) {
+            const element = document.getElementById(`element-${index}`);
+            element.className = `array-element ${className}`;
+        }
+
+        function showMinMarker(index) {
+            const marker = document.getElementById(`marker-${index}`);
+            marker.classList.add('visible');
+        }
+
+        function hideMinMarker(index) {
+            const marker = document.getElementById(`marker-${index}`);
+            marker.classList.remove('visible');
+        }
+
+        function hideAllMarkers() {
+            for (let i = 0; i < array.length; i++) {
+                hideMinMarker(i);
+            }
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function swapElements(i, minIdx) {
+            const element1 = document.getElementById(`element-${i}`);
+            const element2 = document.getElementById(`element-${minIdx}`);
+            
+            element1.classList.add('swapping');
+            element2.classList.add('swapping');
+            
+            await sleep(speed / 2);
+            
+            // Swap values in array
+            [array[i], array[minIdx]] = [array[minIdx], array[i]];
+            
+            // Update visual elements
+            element1.textContent = array[i];
+            element1.style.height = `${array[i] * 20 + 50}px`;
+            element2.textContent = array[minIdx];
+            element2.style.height = `${array[minIdx] * 20 + 50}px`;
+            
+            await sleep(speed / 2);
+            
+            element1.classList.remove('swapping');
+            element2.classList.remove('swapping');
+        }
+
+        async function startSort() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            document.querySelector('.start-btn').disabled = true;
+            document.querySelector('.reset-btn').disabled = true;
+            
+            const n = array.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                // Highlight current position
+                highlightElement(i, 'current');
+                updateStatus(`Pass ${i + 1}: Finding minimum in positions ${i} to ${n - 1}`);
+                await sleep(speed);
+                
+                // Find minimum element
+                let minIdx = i;
+                showMinMarker(minIdx);
+                highlightElement(minIdx, 'minimum');
+                
+                updateStatus(`Current minimum: ${array[minIdx]} at position ${minIdx}`);
+                await sleep(speed);
+                
+                // Search for minimum in remaining array
+                for (let j = i + 1; j < n; j++) {
+                    highlightElement(j, 'comparing');
+                    updateStatus(`Comparing ${array[minIdx]} with ${array[j]}`);
+                    await sleep(speed);
+                    
+                    if (array[j] < array[minIdx]) {
+                        // Reset previous minimum
+                        if (minIdx !== i) {
+                            highlightElement(minIdx, '');
+                        }
+                        hideMinMarker(minIdx);
+                        
+                        // Update minimum
+                        minIdx = j;
+                        showMinMarker(minIdx);
+                        highlightElement(minIdx, 'minimum');
+                        updateStatus(`New minimum found: ${array[minIdx]} at position ${minIdx}`);
+                        await sleep(speed);
+                    }
+                    
+                    // Reset comparison highlight
+                    if (j !== minIdx) {
+                        highlightElement(j, '');
+                    }
+                }
+                
+                // Swap if needed
+                if (minIdx !== i) {
+                    updateStatus(`Swapping ${array[i]} and ${array[minIdx]}`);
+                    await sleep(speed);
+                    await swapElements(i, minIdx);
+                } else {
+                    updateStatus(`${array[i]} is already in the correct position`);
+                    await sleep(speed);
+                }
+                
+                // Mark as sorted
+                hideAllMarkers();
+                highlightElement(i, 'sorted');
+                
+                updateStatus(`Position ${i} is now sorted with value ${array[i]}`);
+                await sleep(speed);
+            }
+            
+            // Mark last element as sorted
+            highlightElement(n - 1, 'sorted');
+            updateStatus('Array is completely sorted! 🎉');
+            
+            isRunning = false;
+            document.querySelector('.start-btn').disabled = false;
+            document.querySelector('.reset-btn').disabled = false;
+        }
+
+        function resetArray() {
+            if (isRunning) return;
+            
+            array = [5, 2, 8, 12, 1, 6, 3];
+            createArrayVisualization();
+            updateStatus('Array reset. Click "Start Sorting" to begin the Selection Sort algorithm');
+            hideAllMarkers();
+        }
+
+        function toggleSpeed() {
+            const button = document.querySelector('.speed-btn');
+            speedLevel = (speedLevel % 3) + 1;
+            
+            switch(speedLevel) {
+                case 1:
+                    speed = 1500;
+                    button.textContent = 'Speed: Slow';
+                    break;
+                case 2:
+                    speed = 1000;
+                    button.textContent = 'Speed: Normal';
+                    break;
+                case 3:
+                    speed = 500;
+                    button.textContent = 'Speed: Fast';
+                    break;
+            }
+        }
+
+        // Initialize the visualization
+        createArrayVisualization();
+    </script>
+</body>
+</html>
